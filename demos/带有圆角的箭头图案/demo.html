@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>带有圆角的箭头图案</title>
+</head>
+<body>
+	<canvas id="cvs"></canvas>
+</body>
+<script type="text/javascript">
+// Variables
+	var cvs = document.getElementById('cvs'),
+		ctx = cvs.getContext('2d'),
+
+		ANGLE_MAX = Math.PI * 2,
+		ARROW_MARGIN = 30,
+		POINT_RADIUS = 7,
+		points = [];
+// Functions
+	// 绘制点
+	function drawPoint(x, y, strokeStyle, fillStyle){
+		ctx.strokeStyle = strokeStyle;
+		ctx.fillStyle = fillStyle;
+		ctx.lineWidth = .5;
+
+		ctx.beginPath();
+		ctx.arc(x, y, POINT_RADIUS, 0, ANGLE_MAX, false);
+		ctx.fill();
+		ctx.stroke();
+	}
+
+	// 绘制贝塞尔点
+	function drawBezierPoints(){
+		var i,
+			len,
+			strokeStyle,
+			fillStyle;
+
+		for(i = 0, len = points.length; i < len; i++){
+			// fill => white => 控制点
+			// fill => blue => 锚点
+			fillStyle = i % 2 === 0 ? 'white' : 'blue';
+			strokeStyle = i % 2 === 0 ? 'blue' : 'white';
+			drawPoint(points[i].x, points[i].y, strokeStyle, fillStyle);
+		}
+	}
+
+	// 绘制箭头
+	function drawArrow(){
+		ctx.strokeStyle = 'white';
+		ctx.fillStyle = 'cornflowerblue';
+
+		ctx.moveTo(cvs.width - ARROW_MARGIN, ARROW_MARGIN * 2);
+		ctx.lineTo(cvs.width - ARROW_MARGIN, cvs.height - ARROW_MARGIN * 2);
+		ctx.quadraticCurveTo(points[0].x, points[0].y, points[1].x, points[1].y);
+		ctx.lineTo(ARROW_MARGIN, cvs.height / 2 + ARROW_MARGIN);
+		ctx.quadraticCurveTo(points[2].x, points[2].y, points[3].x, points[3].y);
+		ctx.lineTo(cvs.width - ARROW_MARGIN * 2, ARROW_MARGIN);
+		ctx.quadraticCurveTo(points[4].x, points[4].y, points[5].x, points[5].y);
+		ctx.fill();
+		ctx.stroke();
+	}
+
+// Initialization
+	cvs.width = 600;
+	cvs.height = 600;
+
+	points = [
+		{
+			x: cvs.width - ARROW_MARGIN,
+			y: cvs.height - ARROW_MARGIN
+		},{
+			x: cvs.width - ARROW_MARGIN * 2,
+			y: cvs.height - ARROW_MARGIN
+		},{
+			x: POINT_RADIUS,
+			y: cvs.height / 2
+		},{
+			x: ARROW_MARGIN,
+			y: cvs.height / 2 - ARROW_MARGIN
+		},{
+			x: cvs.width - ARROW_MARGIN,
+			y: ARROW_MARGIN
+		},{
+			x: cvs.width - ARROW_MARGIN,
+			y: ARROW_MARGIN * 2
+		}
+	];
+	ctx.clearRect(0, 0, cvs.width, cvs.height);
+	drawArrow();
+	drawBezierPoints();
+</script>
+</html>

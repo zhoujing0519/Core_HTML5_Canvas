@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>橡皮擦</title>
+	<style>
+		#cvs{
+			border: thin solid pink;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="cvs"></canvas>
+</body>
+<script type="text/javascript">
+	var cvs = document.getElementById('cvs');
+	var ctx = cvs.getContext('2d');
+
+	var ERASER_LINE_WIDTH = 1;
+	var ERASER_SHADOW_STYLE = 'blue';
+	var ERASER_STROKE_STYLE = 'rgba(0, 0, 255, .6)';
+	var ERASER_SHADOW_OFFSET = -5;
+	var ERASER_SHADOW_BLUR = 20;
+	var ERASER_RADIUS = 60;
+
+	// Eraser.........................................
+
+	// 设置橡皮擦的属性
+	function setEraserAttributes(){
+		ctx.lineWidth = ERASER_LINE_WIDTH;
+		ctx.shadowColor = ERASER_SHADOW_STYLE;
+		ctx.shadowOffsetX = ERASER_SHADOW_OFFSET;
+		ctx.shadowOffsetY = ERASER_SHADOW_OFFSET;
+		ctx.shadowBlur = ERASER_SHADOW_BLUR;
+		ctx.strokeStyle = ERASER_STROKE_STYLE;
+	}
+
+	// 绘制橡皮擦
+	function drawEraser(loc){
+		ctx.save();
+
+		setEraserAttributes();
+		ctx.beginPath();
+		ctx.arc(loc.x, loc.y, ERASER_RADIUS, 0, Math.PI * 2, false); // 在鼠标位置绘制圆
+		ctx.clip(); // 创建剪辑区域
+		ctx.stroke();
+
+		ctx.restore();
+	}
+
+	// Event Handlers....................................
+
+	cvs.onmousemove = function(e){
+		var loc = {
+			x: e.clientX,
+			y: e.clientY
+		};
+
+		ctx.clearRect(0, 0, cvs.width, cvs.height);
+		drawEraser(loc);
+	};
+</script>
+</html>

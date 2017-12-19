@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>剪纸效果-2</title>
+</head>
+<body>
+	<canvas id="cvs"></canvas>
+</body>
+<script type="text/javascript">
+	// Varaibles......................................
+		var cvs = document.getElementById('cvs');
+		var ctx = cvs.getContext('2d');
+			cvs.width = 600;
+			cvs.height = 600;
+
+		const AXIS_MARGIN = 40;
+		const AXIS_ORIGIN = {
+			x: AXIS_MARGIN,
+			y: cvs.height - AXIS_MARGIN
+		};
+		const AXIS_TOP = AXIS_MARGIN;
+		const AXIS_RIGHT = cvs.width - AXIS_MARGIN;
+		const AXIS_WIDTH = AXIS_RIGHT - AXIS_ORIGIN.x;
+		const AXIS_HEIGHT = AXIS_ORIGIN.y - AXIS_TOP;
+
+		const HORIZONTAL_TICK_SPACING = 10;
+		const VERTICAL_TICK_SPACING = 10;
+
+		const NUM_HORIZONTAL_TICKS = AXIS_WIDTH / HORIZONTAL_TICK_SPACING;
+		const NUM_VERTICAL_TICKS = AXIS_HEIGHT / VERTICAL_TICK_SPACING;
+
+		const TICK_WIDTH = 10;
+		const TICK_LINEWIDTH = .5;
+		const TICK_COLOR = 'navy';
+
+		const AXIS_LINEWIDTH = 1;
+		const AXIS_COLOR = 'blue';
+
+	// Functions......................................
+		function grid(ctx, color, stepX, stepY){
+			var width = ctx.canvas.width;
+			var height = ctx.canvas.height;
+
+			ctx.strokeStyle = color;
+			ctx.lineWidth = .5;
+
+			// 绘制行
+			for(var i = stepY + .5; i < height; i += stepY){
+				ctx.beginPath();
+				ctx.moveTo(0, i);
+				ctx.lineTo(width, i);
+				ctx.stroke();
+			}
+
+			// 绘制列
+			for(var i = stepX + .5; i < width; i += stepX){
+				ctx.beginPath();
+				ctx.moveTo(i, 0);
+				ctx.lineTo(i, height);
+				ctx.stroke();
+			}
+		}
+
+		// 绘制坐标
+		function drawAxes(){
+			ctx.save();
+
+			ctx.strokeStyle = AXIS_COLOR;
+			ctx.lineWidth = AXIS_LINEWIDTH;
+			drawHorizontalAxis();
+			drawVerticalAxis();
+
+			ctx.lineWidth = TICK_LINEWIDTH;
+			ctx.strokeStyle = TICK_COLOR;
+			drawHorizontalAxisTicks();
+			drawVerticalAxisTicks();
+
+			ctx.restore();
+		}
+
+		// 绘制横轴
+		function drawHorizontalAxis(){
+			ctx.beginPath();
+			ctx.moveTo(AXIS_ORIGIN.x, AXIS_ORIGIN.y);
+			ctx.lineTo(AXIS_RIGHT, AXIS_ORIGIN.y);
+			ctx.stroke();
+		}
+
+		// 绘制纵轴
+		function drawVerticalAxis(){
+			ctx.beginPath();
+			ctx.moveTo(AXIS_ORIGIN.x, AXIS_ORIGIN.y);
+			ctx.lineTo(AXIS_ORIGIN.x, AXIS_TOP);
+			ctx.stroke();
+		}
+
+		// 绘制横轴刻度
+		function drawHorizontalAxisTicks(){
+			let deltaY;
+
+			for(let i = 0; i < NUM_HORIZONTAL_TICKS; ++i){
+				deltaY = i % 5 === 0 ? TICK_WIDTH : TICK_WIDTH / 2;
+				ctx.beginPath();
+				ctx.moveTo(AXIS_ORIGIN.x + i * HORIZONTAL_TICK_SPACING, AXIS_ORIGIN.y - deltaY);
+				ctx.lineTo(AXIS_ORIGIN.x + i * HORIZONTAL_TICK_SPACING, AXIS_ORIGIN.y + deltaY);
+				ctx.stroke();
+			}
+		}
+
+		// 绘制纵轴刻度
+		function drawVerticalAxisTicks(){
+			let deltaX;
+
+			for(let i = 0; i < NUM_VERTICAL_TICKS; ++i){
+				deltaX = i % 5 === 0 ? TICK_WIDTH : TICK_WIDTH / 2;
+				ctx.beginPath();
+				ctx.moveTo(AXIS_ORIGIN.x - deltaX, AXIS_ORIGIN.y - i * VERTICAL_TICK_SPACING);
+				ctx.lineTo(AXIS_ORIGIN.x + deltaX, AXIS_ORIGIN.y - i * VERTICAL_TICK_SPACING);
+				ctx.stroke();
+			}
+		}
+
+		// 绘制
+		function draw(){
+			ctx.clearRect(0, 0, cvs.width, cvs.height);
+			grid(ctx, 'lightgray', 10, 10);
+			drawAxes();
+
+			ctx.save();
+
+			ctx.shadowColor = 'rgba(200, 200, 0, .5)';
+			ctx.shadowOffsetX = 12;
+			ctx.shadowOffsetY = 12;
+			ctx.shadowBlur = 15;
+
+			drawCutouts();
+			strokeCutoutShapes();
+
+			ctx.restore();
+		}
+
+		// 绘制剪影
+		function drawCutouts(){
+			ctx.beginPath();
+
+			// CW => 顺时针
+			addOuterRectanglePath(); // 外框
+
+			// CCW => 逆时针
+			addCirclePath(); // 圆剪纸
+			addRectanglePath(); // 矩形剪纸
+			addTrianglePath(); // 三角形剪纸
+
+			ctx.fill();
+		}
+
+		// 给剪纸添加描边
+		function strokeCutoutShapes(){
+			ctx.save();
+
+			ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
+
+			ctx.beginPath();
+			addOuterRectanglePath();
+			ctx.stroke();
+
+			ctx.beginPath();
+			addCirclePath();
+			addRectanglePath();
+			addTrianglePath();
+			ctx.stroke();
+
+			ctx.restore();
+		}
+
+		// 带有路径的矩形路径
+		function rect(x, y, w, h, direction){
+			ctx.moveTo(x, y);
+
+			if(direction){ // 逆时针
+				ctx.lineTo(x, y+h);
+				ctx.lineTo(x+w, y+h);
+				ctx.lineTo(x+w, y);
+			}else{ // 顺时针
+				ctx.lineTo(x+w, y);
+				ctx.lineTo(x+w, y+h);
+				ctx.lineTo(x, y+h);
+			}
+			ctx.closePath();
+		}
+
+		// 添加外框
+		function addOuterRectanglePath(){
+			ctx.rect(110, 25, 370, 335); // 默认 => 顺时针
+		}
+
+		// 添加圆剪纸
+		function addCirclePath(){
+			ctx.arc(300, 300, 40, 0, Math.PI * 2, true); // true => 逆时针
+		}
+
+		// 添加矩形剪纸
+		function addRectanglePath(){
+			rect(310, 55, 70, 35, true); // => 逆时针
+		}
+
+		// 添加三角形剪纸
+		function addTrianglePath(){
+			ctx.moveTo(400, 200);
+			ctx.lineTo(250, 115);
+			ctx.lineTo(200, 200); // => 逆时针
+			ctx.closePath(); // 画完三角形才关闭路径
+		}
+
+	// Initialization...................................
+
+		ctx.fillStyle = 'goldenrod';
+		draw();
+</script>
+</html>
