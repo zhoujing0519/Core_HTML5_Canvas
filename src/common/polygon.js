@@ -22,6 +22,7 @@ class Polygon {
 				x: this.x + this.radius * Math.sin(angle),
 				y: this.y - this.radius * Math.cos(angle)
 			}));
+			angle += 2 * Math.PI / this.sides;
 		}
 
 		return points;
@@ -65,3 +66,5 @@ class Polygon {
 		this.y = y;
 	}
 }
+
+export default Polygon

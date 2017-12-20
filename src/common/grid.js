@@ -3,6 +3,7 @@ function grid(ctx, color = 'lightgray', stepX = 10, stepY = 10){
 	const width = ctx.canvas.width;
 	const height = ctx.canvas.height;
 
+	ctx.save();
 	ctx.strokeStyle = color;
 	ctx.lineWidth = .5;
 
@@ -21,6 +22,8 @@ function grid(ctx, color = 'lightgray', stepX = 10, stepY = 10){
 		ctx.lineTo(i, height);
 		ctx.stroke();
 	}
+	
+	ctx.restore();
 }
 
 export default grid

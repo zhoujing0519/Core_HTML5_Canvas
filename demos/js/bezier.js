@@ -82,6 +82,7 @@ function grid(ctx) {
 	var width = ctx.canvas.width;
 	var height = ctx.canvas.height;
 
+	ctx.save();
 	ctx.strokeStyle = color;
 	ctx.lineWidth = .5;
 
@@ -100,6 +101,8 @@ function grid(ctx) {
 		ctx.lineTo(i, height);
 		ctx.stroke();
 	}
+
+	ctx.restore();
 }
 
 exports.default = grid;

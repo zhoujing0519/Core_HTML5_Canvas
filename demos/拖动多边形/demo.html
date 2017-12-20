@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>拖动多边形</title>
+</head>
+<body>
+	<button id="eraseAllButton">清空</button>
+	描边：<select id="strokeStyleSelect">
+		<option value="red">red</option>
+	</select>
+	填充：<select id="fillStyleSelect">
+		<option value="yellow">yellow</option>
+	</select>
+	角度：<select id="startAngleSelect">
+		<option value="0">0</option>
+	</select>
+	边数：<select id="sidesSelect">
+		<option value="3">3</option>
+		<option value="4">4</option>
+		<option value="5">5</option>
+		<option value="6">6</option>
+	</select>
+	<input type="checkbox" id="fillCheckbox">填充
+	<input type="checkbox" id="editCheckbox">编辑
+	<canvas id="cvs"></canvas>
+</body>
+<script type="text/javascript" src="../js/drag.js"></script>
+</html>
