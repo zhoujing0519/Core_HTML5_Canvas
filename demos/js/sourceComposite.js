@@ -60,12 +60,12 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 6);
+/******/ 	return __webpack_require__(__webpack_require__.s = 11);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 0:
+/***/ 1:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -74,103 +74,82 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-// 绘制网格
-function grid(ctx) {
-	var color = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'lightgray';
-	var stepX = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 10;
-	var stepY = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 10;
+function windowToObj(obj, x, y) {
+	var boundingBox = obj.getBoundingClientRect();
 
-	var width = ctx.canvas.width;
-	var height = ctx.canvas.height;
-
-	ctx.save();
-	ctx.strokeStyle = color;
-	ctx.lineWidth = .5;
-
-	// 绘制行
-	for (var i = stepY + .5; i < height; i += stepY) {
-		ctx.beginPath();
-		ctx.moveTo(0, i);
-		ctx.lineTo(width, i);
-		ctx.stroke();
-	}
-
-	// 绘制列
-	for (var i = stepX + .5; i < width; i += stepX) {
-		ctx.beginPath();
-		ctx.moveTo(i, 0);
-		ctx.lineTo(i, height);
-		ctx.stroke();
-	}
-
-	ctx.restore();
+	return {
+		x: x - boundingBox.left * (obj.width / boundingBox.width),
+		y: y - boundingBox.top * (obj.height / boundingBox.height)
+	};
 }
 
-exports.default = grid;
+exports.default = windowToObj;
 
 /***/ }),
 
-/***/ 6:
+/***/ 11:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _grid = __webpack_require__(0);
+var _windowToObj = __webpack_require__(1);
 
-var _grid2 = _interopRequireDefault(_grid);
+var _windowToObj2 = _interopRequireDefault(_windowToObj);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var cvs = document.getElementById('cvs'),
-    ctx = cvs.getContext('2d'),
-    endPoints = [{ x: 130, y: 70 }, { x: 430, y: 270 }],
-    controlPoints = [{ x: 130, y: 250 }, { x: 450, y: 70 }];
+// Constant => 常量
+var cvs = document.getElementById('cvs');
+var ctx = cvs.getContext('2d');
+var selectElement = document.getElementById('compositingSelect');
 
-// Functions
-// 绘制贝塞尔曲线
-function drawBezierCurve() {
-	ctx.strokeStyle = 'blue';
+// Functions => 函数
+// 绘制文字
+function drawText() {
+	ctx.save();
 
-	ctx.beginPath();
-	ctx.moveTo(endPoints[0].x, endPoints[0].y);
-	ctx.bezierCurveTo(controlPoints[0].x, controlPoints[0].y, controlPoints[1].x, controlPoints[1].y, endPoints[1].x, endPoints[1].y);
-	ctx.stroke();
-}
-
-// 绘制锚点
-function drawEndPoints() {
-	ctx.strokeStyle = 'blue';
-	ctx.fillStyle = 'red';
-
-	endPoints.forEach(drawPoint);
-}
-
-// 绘制控制点
-function drawControlPoints() {
+	ctx.shadowColor = 'rgba(100, 100, 150, .8)';
+	ctx.shadowOffsetX = 5;
+	ctx.shadowOffsetY = 5;
+	ctx.shadowBlur = 10;
+	ctx.fillStyle = 'cornflowerblue';
 	ctx.strokeStyle = 'yellow';
-	ctx.fillStyle = 'blue';
 
-	controlPoints.forEach(drawPoint);
+	ctx.fillText('HTML5', 20, 250);
+	ctx.strokeText('HTML5', 20, 250);
+
+	ctx.restore();
 }
 
-// 绘制点
-function drawPoint(point) {
+// 获取鼠标相对于canvas的坐标
+function getPosition(e) {
+	return (0, _windowToObj2.default)(cvs, e.clientX, e.clientY);
+}
+
+// Event handlers => 事件句柄
+cvs.onmousemove = function (e) {
+	var loc = getPosition(e);
+
+	ctx.clearRect(0, 0, cvs.width, cvs.height);
+	drawText();
+
+	ctx.save();
+
+	ctx.globalCompositeOperation = selectElement.value;
 	ctx.beginPath();
-	ctx.arc(point.x, point.y, 5, 0, Math.PI * 2, false);
-	ctx.stroke;
+	ctx.arc(loc.x, loc.y, 100, 0, Math.PI * 2, false);
+	ctx.fillStyle = 'orange';
+	ctx.stroke();
 	ctx.fill();
-}
 
-// Initialization
-cvs.width = 600;
-cvs.height = 600;
+	ctx.restore();
+};
 
-(0, _grid2.default)(ctx);
-
-drawBezierCurve();
-drawControlPoints();
-drawEndPoints();
+// Initializations => 初始化
+ctx.lineWidth = .5;
+ctx.font = '128pt Comic-sans';
+drawText();
 
 /***/ })
 

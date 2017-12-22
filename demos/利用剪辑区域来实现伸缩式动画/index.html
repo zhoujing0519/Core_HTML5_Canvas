@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>利用剪辑区域来实现伸缩式动画</title>
+</head>
+<body>
+	<canvas id="cvs" width="600" height="450"></canvas>
+</body>
+<script type="text/javascript">
+	var cvs = document.getElementById('cvs'),
+		ctx = cvs.getContext('2d');
+
+	function drawText(){
+		ctx.save();
+
+		ctx.shadowColor = 'rgba(100, 100, 150, .8)';
+		ctx.shadowOffsetX = 5;
+		ctx.shadowOffsetY = 5;
+		ctx.shadowBlur = 10;
+
+		ctx.fillStyle = 'cornflowerblue';
+		ctx.strokeStyle = 'yellow';
+
+		ctx.fillText('HTML5', 20, 250);
+		ctx.strokeText('HTML5', 20, 250);
+
+		ctx.restore();
+	}
+
+	function setClippingRegion(radius){
+		ctx.beginPath();
+		ctx.arc(cvs.width/2, cvs.height/2, radius, 0, Math.PI * 2, false);
+		ctx.clip();
+	}
+
+	function fillCanvas(color){
+		ctx.fillStyle = color;
+		ctx.fillRect(0, 0, cvs.width, cvs.height);
+	}
+
+	function endAnimation(loop){
+		clearInterval(loop);
+
+		setTimeout(function(e){
+			ctx.clearRect(0, 0, cvs.width, cvs.height);
+			drawText();
+		}, 1000);
+	}
+
+	function drawAnimationFrame(radius){
+		setClippingRegion(radius);
+		fillCanvas('lightgray');
+		drawText();
+	}
+
+	function animate(){
+		var radius = cvs.width/2,
+			loop;
+
+		loop = window.setInterval(function(){
+			radius -= cvs.width/100;
+
+			fillCanvas('charcoal');
+			if(radius > 0){
+				ctx.save();
+				drawAnimationFrame(radius);
+				ctx.restore();
+			}else{
+				endAnimation(loop);
+			}
+		}, 16);
+	}
+
+	cvs.onmousedown = function(e){
+		animate();
+	};
+
+	ctx.lineWidth = .5;
+	ctx.font = '128pt Comic-sans';
+	console.log(ctx.measureText('HTML5'));
+	drawText();
+</script>
+</html>

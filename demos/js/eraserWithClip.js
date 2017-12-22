@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 7);
+/******/ 	return __webpack_require__(__webpack_require__.s = 12);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -236,7 +236,12 @@ exports.default = guidewires;
 /***/ }),
 /* 5 */,
 /* 6 */,
-/* 7 */
+/* 7 */,
+/* 8 */,
+/* 9 */,
+/* 10 */,
+/* 11 */,
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -244,211 +249,212 @@ exports.default = guidewires;
 
 var _dom = __webpack_require__(2);
 
-var _grid = __webpack_require__(0);
-
-var _grid2 = _interopRequireDefault(_grid);
-
-var _windowToObj = __webpack_require__(1);
-
-var _windowToObj2 = _interopRequireDefault(_windowToObj);
-
 var _imageData = __webpack_require__(3);
 
 var _imageData2 = _interopRequireDefault(_imageData);
 
-var _polygon = __webpack_require__(8);
+var _grid = __webpack_require__(0);
 
-var _polygon2 = _interopRequireDefault(_polygon);
+var _grid2 = _interopRequireDefault(_grid);
 
 var _guidewires = __webpack_require__(4);
 
 var _guidewires2 = _interopRequireDefault(_guidewires);
 
+var _windowToObj = __webpack_require__(1);
+
+var _windowToObj2 = _interopRequireDefault(_windowToObj);
+
+var _rubberband = __webpack_require__(13);
+
+var _rubberband2 = _interopRequireDefault(_rubberband);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// Variable
+// Constants => 常量
 var cvs = (0, _dom.$)('#cvs'),
     ctx = cvs.getContext('2d'),
-    eraseAllButton = (0, _dom.$)('#eraseAllButton'),
     strokeStyleSelect = (0, _dom.$)('#strokeStyleSelect'),
-    startAngleSelect = (0, _dom.$)('#startAngleSelect'),
     fillStyleSelect = (0, _dom.$)('#fillStyleSelect'),
-    fillCheckbox = (0, _dom.$)('#fillCheckbox'),
-    editCheckbox = (0, _dom.$)('#editCheckbox'),
-    sidesSelect = (0, _dom.$)('#sidesSelect');
-
-var imageData = new _imageData2.default(),
+    eraserShapeSelect = (0, _dom.$)('#eraserShapeSelect'),
+    eraserWidthSelect = (0, _dom.$)('#eraserWidthSelect'),
+    drawRadio = (0, _dom.$)('#drawRadio'),
+    eraseRadio = (0, _dom.$)('#eraseRadio'),
+    ERASER_LINE_WIDTH = 1,
+    ERASER_STROKE_STYLE = 'rgb(0, 0, 255)',
+    ERASER_SHADOW_STYLE = 'blue',
+    ERASER_SHADOW_COLOR = 'rgb(0, 0, 0)',
+    ERASER_SHADOW_OFFSET = -5,
+    ERASER_SHADOW_BLUR = 20,
+    GRID_HORIZONTAL_SPACING = 10,
+    GRID_VERTICAL_SPACING = 10,
+    GRID_LINE_COLOR = 'lightblue',
+    drawingSurfaceImageData = new _imageData2.default(),
     mousedown = {},
-    rubberbandRect = {},
+    rubberband = new _rubberband2.default({
+	drawRubberbandShape: function drawRubberbandShape(ctx, loc, mousedown) {
+		var angle = Math.atan(this.rubberbandRect.height / this.rubberbandRect.width);
+		var radius = this.rubberbandRect.height / Math.sin(angle);
+
+		if (mousedown.y === loc.y) radius = Math.abs(loc.x - mousedown.x);
+		ctx.beginPath();
+		ctx.arc(mousedown.x, mousedown.y, radius, 0, Math.PI * 2, false);
+		ctx.stroke();
+		ctx.fill();
+	}
+});
+
+// Letters => 变量
+var lastX = void 0,
+    lastY = void 0,
     dragging = false,
-    draggingOffsetX = void 0,
-    draggingOffsetY = void 0,
-    sides = 8,
-    startAngle = 0,
-    guidewires = true,
-    editing = false,
-    polygons = [];
+    guidewires = true;
 
-// Functions
-// 绘制多边形
-function drawPolygon(polygon) {
+// Functions => 函数
+// Eraser => 橡皮擦
+// 为橡皮擦设置绘图路径
+function setDrawPathForEraser(loc) {
+	var eraserWidth = parseFloat(eraserWidthSelect.value);
+	var eraserShape = {
+		circle: function circle() {
+			ctx.arc(loc.x, loc.y, eraserWidth / 2, 0, Math.PI * 2, false);
+		},
+		square: function square() {
+			ctx.rect(loc.x - eraserWidth / 2, loc.y - eraserWidth / 2, eraserWidth, eraserWidth);
+		}
+	};
+
 	ctx.beginPath();
-	polygon.createPath(ctx);
-	polygon.stroke(ctx);
-
-	if (fillCheckbox.checked) polygon.fill(ctx);
+	eraserShape[eraserShapeSelect.value]();
+	ctx.clip();
 }
 
-// 绘制所有多边形
-function drawPolygons() {
-	polygons.forEach(function (polygon) {
-		drawPolygon(polygon);
-	});
+// 位橡皮擦设置擦除路径
+function setErasePathForEraser() {
+	var eraserWidth = parseFloat(eraserWidthSelect.value);
+	var eraserShape = {
+		circle: function circle() {
+			ctx.arc(lastX, lastY, eraserWidth / 2 + ERASER_LINE_WIDTH, 0, Math.PI * 2, false);
+		},
+		square: function square() {
+			ctx.rect(lastX - eraserWidth / 2 - ERASER_LINE_WIDTH, lastY - eraserWidth / 2 - ERASER_LINE_WIDTH, eraserWidth + ERASER_LINE_WIDTH * 2, eraserWidth + ERASER_LINE_WIDTH * 2);
+		}
+	};
+
+	ctx.beginPath();
+	eraserShape[eraserShapeSelect.value]();
+	ctx.clip();
 }
 
-// 更新橡皮筋矩形
-function updateRubberbandRectangle(loc) {
-	var offsetX = loc.x - mousedown.x,
-	    offsetY = loc.y - mousedown.y;
-
-	rubberbandRect.width = Math.abs(offsetX);
-	rubberbandRect.height = Math.abs(offsetY);
-	rubberbandRect.left = offsetX > 0 ? mousedown.x : loc.x;
-	rubberbandRect.top = offsetY > 0 ? mousedown.y : loc.y;
+// 设置橡皮擦属性
+function setEraserAttributes() {
+	ctx.lineWidth = ERASER_LINE_WIDTH;
+	ctx.shadowColor = ERASER_SHADOW_COLOR;
+	ctx.shadowOffsetX = ERASER_SHADOW_OFFSET;
+	ctx.shadowOffsetY = ERASER_SHADOW_OFFSET;
+	ctx.shadowBlur = ERASER_SHADOW_BLUR;
+	ctx.strokeStyle = ERASER_STROKE_STYLE;
 }
 
-// 绘制通过橡皮筋拉出来的多边形
-function drawRubberbandShape(loc, sides, startAngle) {
-	var polygon = new _polygon2.default({
-		centerX: mousedown.x,
-		centerY: mousedown.y,
-		radius: rubberbandRect.width,
-		sides: parseInt(sidesSelect.value),
-		startAngle: Math.PI / 180 * parseInt(startAngleSelect.value),
-		strokeStyle: ctx.strokeStyle,
-		fillStyle: ctx.fillStyle,
-		filled: fillCheckbox.checked
-	});
+// 擦除后的操作
+function eraseLast() {
+	ctx.save();
 
-	drawPolygon(polygon);
-	if (!dragging) polygons.push(polygon);
+	setErasePathForEraser();
+	(0, _grid2.default)(ctx, GRID_LINE_COLOR, GRID_HORIZONTAL_SPACING, GRID_VERTICAL_SPACING);
+
+	ctx.restore();
 }
 
-// 更新橡皮筋
-function updateRubberband(loc, sides, startAngle) {
-	updateRubberbandRectangle(loc);
-	drawRubberbandShape(loc, sides, startAngle);
+// 绘制橡皮擦
+function drawEraser(loc) {
+	ctx.save();
+
+	setEraserAttributes();
+	setDrawPathForEraser(loc);
+	ctx.stroke();
+
+	ctx.restore();
 }
 
-// 拖动：开始
-function startDragging(loc) {
-	imageData.saveDrawingSurface(ctx);
-	mousedown.x = loc.x;
-	mousedown.y = loc.y;
+// 获取canvas中相对位置
+function getPosition(e) {
+	return (0, _windowToObj2.default)(cvs, e.clientX, e.clientY);
 }
 
-// 编辑：开始
-function startEditing() {
-	cvs.style.cursor = 'pointer';
-	editing = true;
-}
-
-// 编辑：结束
-function stopEditing() {
-	cvs.style.cursor = 'crosshair';
-	editing = false;
-}
-
-// Event handler
+// Event handler => 事件句柄
+// Canvas事件句柄
 // 鼠标：按下
 cvs.onmousedown = function (e) {
-	var loc = (0, _windowToObj2.default)(cvs, e.clientX, e.clientY);
+	var loc = getPosition(e);
 
 	e.preventDefault();
-	if (editing) {
-		polygons.forEach(function (polygon) {
-			polygon.createPath(ctx);
+	if (drawRadio.checked) drawingSurfaceImageData.saveDrawingSurface(ctx);
 
-			if (ctx.isPointInPath(loc.x, loc.y)) {
-				startDragging(loc);
-				dragging = polygon;
-				draggingOffsetX = loc.x - polygon.x;
-				draggingOffsetY = loc.y - polygon.y;
-				return false;
-			}
-		});
-	} else {
-		startDragging(loc);
-		dragging = true;
-	}
+	mousedown.x = loc.x;
+	mousedown.y = loc.y;
+
+	lastX = loc.x;
+	lastY = loc.y;
+
+	dragging = true;
 };
 
 // 鼠标：移动
 cvs.onmousemove = function (e) {
-	var loc = (0, _windowToObj2.default)(cvs, e.clientX, e.clientY);
+	var loc = void 0;
 
-	e.preventDefault();
-	if (editing && dragging) {
-		dragging.x = loc.x - draggingOffsetX;
-		dragging.y = loc.y - draggingOffsetY;
-		ctx.clearRect(0, 0, cvs.width, cvs.height);
-		(0, _grid2.default)(ctx);
-		drawPolygons();
-	} else {
-		if (dragging) {
-			imageData.restoreDrawingSurface(ctx);
-			updateRubberband(loc, sides, startAngle);
+	if (dragging) {
+		e.preventDefault();
 
-			if (guidewires) (0, _guidewires2.default)(ctx, mousedown.x, mousedown.y);
+		loc = getPosition(e);
+		if (drawRadio.checked) {
+			drawingSurfaceImageData.restoreDrawingSurface(ctx);
+			rubberband.updateRubberband(ctx, loc, mousedown);
+			if (guidewires) (0, _guidewires2.default)(ctx, loc.x, loc.y);
+		} else {
+			eraseLast();
+			drawEraser(loc);
 		}
+
+		lastX = loc.x;
+		lastY = loc.y;
 	}
 };
 
 // 鼠标：松开
 cvs.onmouseup = function (e) {
-	var loc = (0, _windowToObj2.default)(cvs, e.clientX, e.clientY);
+	var loc = getPosition(e);
+
+	if (drawRadio.checked) {
+		drawingSurfaceImageData.restoreDrawingSurface(ctx);
+		rubberband.updateRubberband(ctx, loc, mousedown);
+	}
+	if (eraseRadio.checked) eraseLast();
 
 	dragging = false;
-	if (!editing) {
-		imageData.restoreDrawingSurface(ctx);
-		updateRubberband(loc, sides, startAngle);
-	}
 };
 
-// 清空画布
-eraseAllButton.onclick = function () {
-	ctx.clearRect(0, 0, cvs.width, cvs.height);
-	polygons.length = 0;
-	(0, _grid2.default)(ctx);
-	imageData.saveDrawingSurface(ctx);
-};
-
-// 选择描边颜色
-strokeStyleSelect.onchange = function () {
+// 控制器事件
+// 描边颜色切换
+strokeStyleSelect.onchange = function (e) {
 	ctx.strokeStyle = this.value;
 };
 
-// 选择填充颜色
-fillStyleSelect.onchange = function () {
+// 填充颜色切换
+fillStyleSelect.onchange = function (e) {
 	ctx.fillStyle = this.value;
 };
 
-// 切换编辑状态
-editCheckbox.onchange = function () {
-	this.checked ? startEditing() : stopEditing();
-};
-
-// Initialization
-cvs.width = 600;
-cvs.height = 600;
-
-(0, _grid2.default)(ctx);
+// Initializations => 初始化
 
 ctx.strokeStyle = strokeStyleSelect.value;
 ctx.fillStyle = fillStyleSelect.value;
 
+(0, _grid2.default)(ctx, GRID_LINE_COLOR, GRID_HORIZONTAL_SPACING, GRID_VERTICAL_SPACING);
+
 /***/ }),
-/* 8 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -460,138 +466,38 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _point = __webpack_require__(9);
-
-var _point2 = _interopRequireDefault(_point);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Polygon = function () {
-	function Polygon(_ref) {
-		var centerX = _ref.centerX,
-		    centerY = _ref.centerY,
-		    radius = _ref.radius,
-		    sides = _ref.sides,
-		    _ref$startAngle = _ref.startAngle,
-		    startAngle = _ref$startAngle === undefined ? 0 : _ref$startAngle,
-		    strokeStyle = _ref.strokeStyle,
-		    fillStyle = _ref.fillStyle,
-		    filled = _ref.filled;
+var Rubberband = function () {
+	function Rubberband(_ref) {
+		var drawRubberbandShape = _ref.drawRubberbandShape;
 
-		_classCallCheck(this, Polygon);
+		_classCallCheck(this, Rubberband);
 
-		this.x = centerX;
-		this.y = centerY;
-		this.radius = radius;
-		this.sides = sides;
-		this.startAngle = startAngle;
-		this.strokeStyle = strokeStyle;
-		this.fillStyle = fillStyle;
-		this.filled = filled;
+		this.rubberbandRect = {};
+		this.drawRubberbandShape = drawRubberbandShape;
 	}
 
-	// 获取多边形上的顶点
-
-
-	_createClass(Polygon, [{
-		key: 'getPoints',
-		value: function getPoints() {
-			var points = [],
-			    angle = this.startAngle;
-
-			for (var i = 0, size = this.sides; i < size; ++i) {
-				points.push(new _point2.default({
-					x: this.x + this.radius * Math.sin(angle),
-					y: this.y - this.radius * Math.cos(angle)
-				}));
-				angle += 2 * Math.PI / this.sides;
-			}
-
-			return points;
+	_createClass(Rubberband, [{
+		key: "updateRubberbandRectangle",
+		value: function updateRubberbandRectangle(loc, mousedown) {
+			this.rubberbandRect.width = Math.abs(loc.x - mousedown.x);
+			this.rubberbandRect.height = Math.abs(loc.y - mousedown.y);
+			this.rubberbandRect.left = Math.min(loc.x, mousedown.x);
+			this.rubberbandRect.top = Math.min(loc.y, mousedown.y);
 		}
-
-		// 创建路径
-
 	}, {
-		key: 'createPath',
-		value: function createPath(ctx) {
-			var points = this.getPoints(),
-			    len = points.length;
-			var i = 0;
-
-			ctx.beginPath();
-			ctx.moveTo(points[i].x, points[i].y);
-			for (; i < len; ++i) {
-				ctx.lineTo(points[i].x, points[i].y);
-			}
-			ctx.closePath();
-		}
-
-		// 描边
-
-	}, {
-		key: 'stroke',
-		value: function stroke(ctx) {
-			ctx.save();
-			this.createPath(ctx);
-			ctx.strokeStyle = this.strokeStyle;
-			ctx.stroke();
-			ctx.restore();
-		}
-
-		// 填充
-
-	}, {
-		key: 'fill',
-		value: function fill(ctx) {
-			ctx.save();
-			this.createPath(ctx);
-			ctx.fillStyle = this.fillStyle;
-			ctx.fill();
-			ctx.restore();
-		}
-
-		// 移动多边形
-
-	}, {
-		key: 'move',
-		value: function move(x, y) {
-			this.x = x;
-			this.y = y;
+		key: "updateRubberband",
+		value: function updateRubberband(ctx, loc, mousedown) {
+			this.updateRubberbandRectangle(loc, mousedown);
+			this.drawRubberbandShape(ctx, loc, mousedown);
 		}
 	}]);
 
-	return Polygon;
+	return Rubberband;
 }();
 
-exports.default = Polygon;
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Point = function Point(_ref) {
-	var x = _ref.x,
-	    y = _ref.y;
-
-	_classCallCheck(this, Point);
-
-	this.x = x;
-	this.y = y;
-};
-
-exports.default = Point;
+exports.default = Rubberband;
 
 /***/ })
 /******/ ]);

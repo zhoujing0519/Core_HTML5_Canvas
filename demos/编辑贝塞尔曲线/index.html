@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>编辑贝塞尔曲线</title>
+	<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+	<canvas id="canvas" width="605" height="400">
+		Canvas not supported!
+	</canvas>
+	<div id="controls">
+		Stroke color: <select id="strokeColorSelect">
+			<option value="navy">navy</option>
+			<option value="green">green</option>
+			<option value="blue">blue</option>
+			<option value="orange">orange</option>
+			<option value="cornflowerblue">cornflowerblue</option>
+			<option value="goldnrod">goldnrod</option>
+			<option value="navy">navy</option>
+			<option value="purple">purple</option>
+		</select>
+		Guidewires: 
+		<input id="guidewireCheckbox" type="checkbox" checked>
+		<input id="eraseAllButton" type="button" value="Erase all">
+	</div>
+	<div id="instructions" class="floatingControls">
+		<p>
+			Drag the curve end- and control points to change the shape of the curve.
+		</p>
+		<p>
+			When you are done dragging end- and control points,
+			click outside of the points to finalize the curve.
+		</p>
+		<input type="button" id="instructionsOkayButton" value="Okay" autofocus />
+		<input type="button" id="instructionsNoMoreButton" value="Do not show these instructions again" />
+	</div>
+</body>
+<script type="text/javascript" src="../js/controlBezierCurve.js"></script>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>图像合成模式演示</title>
+	<style>
+		#cvs{
+			position: absolute;
+			left: 150px;
+			top: 10px;
+			background: #eee;
+			border: thin solid #aaa;
+			cursor: pointer;
+			box-shadow: 5px 5px 10px rgba(0, 0, 0, .2);
+		}
+	</style>
+</head>
+<body>
+	<select id="compositingSelect" size="11">
+		<option value="source-atop">source-atop</option>
+		<option value="source-in">source-in</option>
+		<option value="source-out">source-out</option>
+		<option value="source-over" selected>source-over(default)</option>
+		<option value="destination-atop">destination-atop</option>
+		<option value="destination-in">destination-in</option>
+		<option value="destination-out">destination-out</option>
+		<option value="destination-over">destination-over</option>
+		<option value="lighter">lighter</option>
+		<option value="copy">copy</option>
+		<option value="xor">xor</option>
+	</select>
+	<canvas id="cvs" width="600" height="420"></canvas>
+</body>
+<script type="text/javascript" src="../js/sourceComposite.js"></script>
+</html>

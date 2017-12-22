@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>使用剪辑区域来实现橡皮擦</title>
+</head>
+<body>
+	<div id="app">
+		<div class="controls">
+			Stroke color:
+			<select id="strokeStyleSelect">
+				<option value="cornflowerblue">cornflowerblue</option>
+			</select>
+			Fill color:
+			<select id="fillStyleSelect">
+				<option value="red">red</option>
+			</select>
+			Eraser:
+			<select id="eraserShapeSelect">
+				<option value="square">square</option>
+				<option value="circle">circle</option>
+			</select>
+			Eraser width:
+			<select id="eraserWidthSelect">
+				<option value="100">100</option>
+			</select>
+			<input id="drawRadio" type="radio" name="status" checked>
+			Draw
+			<input id="eraseRadio" type="radio" name="status">
+			Erase
+		</div>
+		<canvas id="cvs" width="600" height="400"></canvas>
+	</div>
+</body>
+<script type="text/javascript" src="../js/eraserWithClip.js"></script>
+</html>
