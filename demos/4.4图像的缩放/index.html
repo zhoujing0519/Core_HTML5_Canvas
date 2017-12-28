@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>4.4图像的缩放</title>
+</head>
+<body>
+	<div id="controls">
+		<output id="scaleOutput">1.0</output>
+		<input id="scaleSlider" type="range" min="1" max="3.0" step="0.01" value="1.0"/>
+	</div>
+	<canvas id="canvas"></canvas>
+</body>
+<script>
+	var canvas = document.getElementById('canvas'),
+		context = canvas.getContext('2d'),
+		scaleSlider = document.getElementById('scaleSlider'),
+		scaleOutput = document.getElementById('scaleOutput'),
+		image = new Image(),
+
+		scale = 1.0,
+		MINIMUM_SCALE = 1.0,
+		MAXMUM_SCALE = 3.0;
+
+	function drawImage(){
+		var w = canvas.width,
+			h = canvas.height,
+			sw = w * scale,
+			sh = h * scale;
+
+		context.clearRect(0, 0, w, h);
+		context.drawImage(image, (w - sw)/2, (h - sh)/2, sw, sh);
+	}
+
+	function drawScaleText(value){
+		var text = parseFloat(value).toFixed(2),
+			percent = parseFloat(value - MINIMUM_SCALE) / parseFloat(MAXMUM_SCALE - MINIMUM_SCALE);
+
+		percent = Math.max(0.35, percent);
+		scaleOutput.innerText = text;
+		scaleOutput.style.fontSize = percent * MAXMUM_SCALE / 1.5 + 'em';
+	}
+
+	scaleSlider.onchange = function(e){
+		scale = this.value;
+
+		if(scale < MINIMUM_SCALE){
+			scale = MINIMUM_SCALE;
+		}else if(scale > MAXMUM_SCALE){
+			scale = MAXMUM_SCALE;
+		}
+
+		drawScaleText(scale);
+		drawImage();
+	};
+
+	canvas.width = 1333;
+	canvas.height = 750;
+
+	context.fillStyle = 'cornflowerblue';
+	context.strokeStyle = 'yellow';
+	context.shadowColor = 'rgba(50, 50, 50, 1.0)';
+	context.shadowOffsetX = 5;
+	context.shadowOffsetY = 5;
+	context.shadowBlur = 10;
+
+	image.src = './bg.jpg';
+	image.onload = function(){
+		drawScaleText(scaleSlider.value);
+		drawImage();
+	};
+
+</script>
+</html>
